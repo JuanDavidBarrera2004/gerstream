@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plataformas, dúos y combos de streaming | Precios GerStream</title>
+<meta name="description" content="Precios de pantallas de Netflix, Disney+ Premium con ESPN, HBO Max, Prime Video, Paramount+, Crunchyroll, ViX, Spotify, YouTube Premium y Canva Pro. Dúos y combos con garantía.">
+<link rel="canonical" href="https://www.gerstream.com/plataformas">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#09090f">
+<link rel="icon" href="/img/favicon-48.png" type="image/png">
+<link rel="apple-touch-icon" href="/img/icono-180.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_CO">
+<meta property="og:site_name" content="GerStream">
+<meta property="og:title" content="Catálogo de plataformas | GerStream">
+<meta property="og:description" content="Pantallas, dúos y combos de streaming desde $6.000 con 30 días de garantía.">
+<meta property="og:url" content="https://www.gerstream.com/plataformas">
+<meta property="og:image" content="https://www.gerstream.com/img/compartir.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+
+<header class="cab">
+  <div class="contenedor">
+    <a class="logo" href="/" aria-label="GerStream inicio"><img src="/img/logo-gerstream.png" alt="GerStream" width="94" height="58" style="width:94px;height:58px;object-fit:contain"></a>
+    <nav class="menu" aria-label="Principal">
+      <a href="/">Inicio</a>
+      <a href="/plataformas" class="activo">Plataformas</a>
+      <a href="/codigos">Códigos</a>
+      <a href="/medios-de-pago">Medios de pago</a>
+      <a href="/#garantia">Garantía</a>
+    </nav>
+    <div class="cab-acc">
+      <a class="btn btn-wa btn-wa-cab" data-wa href="#" style="padding:11px 18px">WhatsApp</a>
+      <button class="btn-carrito" data-abrir-carrito aria-label="Ver pedido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg><span data-contador></span></button>
+      <button class="hamb" aria-label="Menú"><svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="cat-cab">
+    <div class="contenedor">
+      <span class="etiqueta-sec">Catálogo</span>
+      <h1>Plataformas y <span class="grad">precios</span></h1>
+      <p>Elige la plataforma y el número de pantallas, agrégala a tu pedido y envíalo por WhatsApp. Las plataformas de video incluyen 30 días de garantía.</p>
+    </div>
+  </section>
+
+  <div class="filtros">
+    <div class="contenedor">
+      <div class="chips" id="chips"></div>
+      <label class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="buscar" type="search" placeholder="Buscar plataforma…" aria-label="Buscar plataforma"></label>
+    </div>
+  </div>
+
+  <div class="contenedor" id="catalogo" style="padding-bottom:100px">
+    <p class="vacio">Cargando plataformas…</p>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <div class="pie-grid">
+      <div><a class="logo" href="/"><img src="/img/logo-gerstream.png" alt="GerStream" width="110" height="68" style="width:110px;height:68px;object-fit:contain"></a><p style="margin-top:16px;max-width:320px">Tu centro de plataformas digitales al mejor precio en Colombia.</p></div>
+      <div><h4>Tienda</h4><ul><li><a href="/plataformas">Plataformas</a></li><li><a href="/medios-de-pago">Medios de pago</a></li><li><a href="/codigos">Solicitar código</a></li><li><a href="/#preguntas">Preguntas frecuentes</a></li></ul></div>
+      <div><h4>Contacto</h4><ul><li><a data-wa href="#">WhatsApp +57 322 854 0542</a></li><li><a href="mailto:info@gerstream.com">info@gerstream.com</a></li><li>Atención 24/7</li></ul></div>
+    </div>
+    <div class="pie-fin"><span>© <span data-anio>2026</span> GerStream. Todos los derechos reservados.</span><span>Las marcas mencionadas pertenecen a sus respectivos dueños.</span></div>
+  </div>
+</footer>
+
+<script type="module">
+  import { iniciar, cargarProductos, tarjeta, activarTarjetas, observarAparicion } from "/tienda.js";
+  import { CATEGORIAS } from "/lib/semilla.js";
+  iniciar();
+
+  const lista = await cargarProductos();
+  const slug = c => c.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const cats = CATEGORIAS.filter(c => lista.some(p => p.categoria === c));
+  const cont = document.getElementById("catalogo");
+  const chips = document.getElementById("chips");
+  let filtro = cats.find(c => slug(c) === location.hash.slice(1)) || "Todas";
+  let texto = "";
+
+  function pintarChips() {
+    chips.innerHTML = ["Todas", ...cats].map(c => `<button class="chip${c === filtro ? " activo" : ""}" data-c="${c}">${c}</button>`).join("");
+  }
+  function pintar() {
+    const q = texto.trim().toLowerCase();
+    const grupos = (filtro === "Todas" ? cats : [filtro]).map(c => {
+      const items = lista.filter(p => p.categoria === c && (!q || (p.nombre + " " + (p.descripcion || "")).toLowerCase().includes(q)));
+      if (!items.length) return "";
+      return `<section id="${slug(c)}"><h2 class="grupo-tit">${c} <span>${items.length} opciones</span></h2>
+        ${c === "Dúos" || c === "Combos" ? `<p class="aviso-combo">Consulta disponibilidad antes de pagar. 1 pantalla por plataforma.</p>` : ""}
+        <div class="rejilla">${items.map(tarjeta).join("")}</div></section>`;
+    }).join("");
+    cont.innerHTML = grupos || `<p class="vacio">No encontramos “${texto.replace(/[<>&"]/g, "")}”. Escríbenos por WhatsApp y te ayudamos.</p>`;
+  }
+  activarTarjetas(cont, lista);
+  chips.addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    filtro = b.dataset.c; history.replaceState(null, "", filtro === "Todas" ? location.pathname : "#" + slug(filtro));
+    pintarChips(); pintar(); observarAparicion();
+  });
+  document.getElementById("buscar").addEventListener("input", e => { texto = e.target.value; pintar(); observarAparicion(); });
+  pintarChips(); pintar();
+  observarAparicion();
+</script>
+</body>
+</html>

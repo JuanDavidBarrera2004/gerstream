@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel de administrador | GerStream</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/img/favicon-48.png" type="image/png">
+<link rel="apple-touch-icon" href="/img/icono-180.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/estilos.css">
+<style>
+  body{min-height:100vh}
+  .login{min-height:100vh;display:grid;place-items:center;padding:20px}
+  .login form{width:min(380px,100%);padding:36px;border-radius:24px;background:var(--tarjeta);border:1px solid var(--borde);display:grid;gap:16px}
+  .login h1{font-size:28px}
+  label.campo{display:grid;gap:6px;font-size:14px;color:var(--suave)}
+  .campo input,.campo select,.campo textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--borde);background:var(--fondo);color:var(--texto);font:inherit}
+  .campo textarea{resize:vertical;min-height:70px}
+  .error{color:#ff6b81;font-size:14px;min-height:20px}
+  .panel{display:none}
+  .barra{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:30px 0 20px}
+  .barra h1{font-size:32px}
+  .barra .der{display:flex;gap:10px;flex-wrap:wrap}
+  .tabla{display:grid;gap:10px;padding-bottom:80px}
+  .fila{display:grid;grid-template-columns:56px 1fr auto auto;gap:16px;align-items:center;padding:12px 16px;border-radius:16px;background:var(--tarjeta);border:1px solid var(--borde)}
+  .fila.oculto{opacity:.5}
+  .mini{width:56px;height:40px;border-radius:10px;background-size:cover;background-position:center}
+  .fila b{font:600 16px var(--f-tit)}
+  .fila small{display:block;color:var(--tenue)}
+  .acciones{display:flex;gap:8px}
+  .acciones button{padding:8px 14px;border-radius:10px;border:1px solid var(--borde);font-size:14px}
+  .acciones .borrar:hover{border-color:#ff6b81;color:#ff6b81}
+  .pill{font-size:12px;padding:4px 10px;border-radius:999px;background:#ffffff10;color:var(--suave);white-space:nowrap}
+  @media(max-width:640px){.fila{grid-template-columns:48px 1fr}.fila .pill{display:none}.acciones{grid-column:1/-1}}
+  dialog{margin:auto;width:min(620px,100% - 24px);max-height:92vh;border-radius:24px;border:1px solid var(--borde);background:var(--fondo2);color:var(--texto);padding:0}
+  dialog::backdrop{background:#000b}
+  dialog form{padding:28px;display:grid;gap:16px}
+  .dos-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .op{display:grid;grid-template-columns:1fr 130px 40px;gap:8px}
+  .op button{border:1px solid var(--borde);border-radius:10px}
+  .checks{display:flex;gap:22px;flex-wrap:wrap;font-size:15px}
+  .checks label{display:flex;gap:8px;align-items:center}
+  .foto-prev{height:120px;border-radius:14px;background:var(--fondo) center/cover;border:1px dashed var(--borde);display:grid;place-items:center;color:var(--tenue);font-size:14px}
+  .pie-dlg{display:flex;justify-content:flex-end;gap:10px}
+  @media(max-width:560px){.dos-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<section class="login" id="login">
+  <form id="formLogin">
+    <a class="logo" href="/"><img src="/img/logo-gerstream.png" alt="GerStream" width="94" height="58" style="width:94px;height:58px;object-fit:contain"></a>
+    <h1>Panel de administrador</h1>
+    <label class="campo">Contraseña<input type="password" id="clave" autocomplete="current-password" required></label>
+    <div class="error" id="errLogin"></div>
+    <button class="btn btn-pri" type="submit">Entrar</button>
+  </form>
+</section>
+
+<section class="panel contenedor" id="panel">
+  <div class="barra">
+    <div><h1>Productos</h1><small style="color:var(--tenue)" id="resumen"></small></div>
+    <div class="der">
+      <label class="buscar" style="flex-basis:220px"><input id="filtro" type="search" placeholder="Buscar…"></label>
+      <button class="btn btn-pri" id="nuevo">+ Nuevo producto</button>
+      <a class="btn btn-sec" href="/plataformas" target="_blank">Ver tienda</a>
+      <button class="btn btn-sec" id="salir">Salir</button>
+    </div>
+  </div>
+  <div class="tabla" id="tabla"></div>
+</section>
+
+<dialog id="dlg">
+  <form id="formProd" method="dialog">
+    <h2 id="dlgTit" style="font-size:24px">Nuevo producto</h2>
+    <label class="campo">Nombre<input id="fNombre" required maxlength="120" placeholder="Ej: Netflix"></label>
+    <div class="dos-col">
+      <label class="campo">Categoría<select id="fCategoria"></select></label>
+      <label class="campo">Etiqueta (opcional)<input id="fEtiqueta" maxlength="24" placeholder="Ej: Más vendido"></label>
+    </div>
+    <label class="campo">Descripción<textarea id="fDescripcion" maxlength="300" placeholder="Ej: 4K + HDR, perfil propio. 30 días de garantía."></textarea></label>
+    <div class="campo">Opciones y precios (en pesos)
+      <div id="fOpciones" style="display:grid;gap:8px"></div>
+      <button type="button" class="btn btn-sec" id="masOpcion" style="padding:9px 16px;justify-self:start">+ Agregar opción</button>
+    </div>
+    <div class="dos-col">
+      <div class="campo">Foto (opcional)
+        <div class="foto-prev" id="fFotoPrev">Sin foto: se usa el color</div>
+        <input type="file" id="fFoto" accept="image/jpeg,image/png,image/webp">
+        <button type="button" class="btn btn-sec" id="quitarFoto" style="padding:7px 14px;justify-self:start">Quitar foto</button>
+      </div>
+      <div style="display:grid;gap:14px;align-content:start">
+        <label class="campo">Color de la tarjeta<input type="color" id="fColor" value="#45b83c" style="height:48px;padding:4px"></label>
+        <label class="campo">Orden (1 = primero)<input type="number" id="fOrden" min="1" max="9999" value="100"></label>
+      </div>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="fActivo" checked> Visible en la tienda</label>
+      <label><input type="checkbox" id="fDestacado"> Destacado en el inicio</label>
+    </div>
+    <div class="error" id="errProd"></div>
+    <div class="pie-dlg">
+      <button type="button" class="btn btn-sec" id="cancelar">Cancelar</button>
+      <button type="submit" class="btn btn-pri" id="guardar">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+  import { CATEGORIAS } from "/lib/semilla.js";
+  const API = "/api/admin";
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pesos = n => "$" + Number(n || 0).toLocaleString("es-CO");
+  let clave = sessionStorage.getItem("gs-clave") || "";
+  let lista = [], editando = null, imagenActual = "";
+
+  async function api(accion, extra = {}) {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clave, accion, ...extra }) });
+    const ct = r.headers.get("content-type") || "";
+    if (!ct.includes("json")) throw new Error("El panel funciona cuando la página está publicada en Cloudflare.");
+    const d = await r.json();
+    if (!r.ok) { const e = new Error(d.error || "Error"); e.status = r.status; throw e; }
+    return d;
+  }
+
+  async function entrar() {
+    lista = await api("listar");
+    sessionStorage.setItem("gs-clave", clave);
+    $("#login").style.display = "none"; $("#panel").style.display = "block";
+    pintar();
+  }
+  $("#formLogin").onsubmit = async e => {
+    e.preventDefault(); clave = $("#clave").value; $("#errLogin").textContent = "";
+    try { await entrar(); } catch (err) { $("#errLogin").textContent = err.message; }
+  };
+  $("#salir").onclick = () => { sessionStorage.removeItem("gs-clave"); location.reload(); };
+  if (clave) entrar().catch(() => sessionStorage.removeItem("gs-clave"));
+
+  function fondo(p) { return p.imagen ? `background-image:url('${esc(p.imagen)}')` : `background:linear-gradient(135deg,${esc(p.color)},#151520)`; }
+  function pintar() {
+    const q = $("#filtro").value.trim().toLowerCase();
+    const orden = [...lista].sort((a, b) => CATEGORIAS.indexOf(a.categoria) - CATEGORIAS.indexOf(b.categoria) || a.orden - b.orden);
+    const ver = orden.filter(p => !q || (p.nombre + p.categoria).toLowerCase().includes(q));
+    $("#resumen").textContent = `${lista.length} productos · ${lista.filter(p => p.activo !== false).length} visibles`;
+    $("#tabla").innerHTML = ver.map(p => `
+      <div class="fila${p.activo === false ? " oculto" : ""}">
+        <span class="mini" style="${fondo(p)}"></span>
+        <div><b>${esc(p.nombre)}</b><small>${p.opciones.map(o => `${esc(o.nombre)} ${pesos(o.precio)}`).join(" · ")}</small></div>
+        <span class="pill">${esc(p.categoria)}${p.destacado ? " · ★" : ""}${p.activo === false ? " · oculto" : ""}</span>
+        <div class="acciones"><button data-editar="${esc(p.id)}">Editar</button><button class="borrar" data-borrar="${esc(p.id)}">Eliminar</button></div>
+      </div>`).join("") || `<p class="vacio">No hay productos. Pulsa “+ Nuevo producto”.</p>`;
+  }
+  $("#filtro").oninput = pintar;
+
+  /* ---------- formulario ---------- */
+  $("#fCategoria").innerHTML = CATEGORIAS.map(c => `<option>${c}</option>`).join("");
+  function filaOpcion(o = { nombre: "", precio: "" }) {
+    const d = document.createElement("div"); d.className = "op";
+    d.innerHTML = `<input class="campo-in" placeholder="Ej: 1 pantalla" value="${esc(o.nombre)}" maxlength="60"><input type="number" min="0" step="500" placeholder="15000" value="${esc(o.precio)}"><button type="button" aria-label="Quitar opción">×</button>`;
+    d.querySelectorAll("input").forEach(i => Object.assign(i.style, { padding: "11px 12px", borderRadius: "10px", border: "1px solid var(--borde)", background: "var(--fondo)", color: "var(--texto)", font: "inherit" }));
+    d.querySelector("button").onclick = () => d.remove();
+    $("#fOpciones").append(d);
+  }
+  $("#masOpcion").onclick = () => filaOpcion();
+  function mostrarFoto() {
+    $("#fFotoPrev").style.backgroundImage = imagenActual ? `url('${imagenActual}')` : "";
+    $("#fFotoPrev").textContent = imagenActual ? "" : "Sin foto: se usa el color";
+  }
+  function abrir(p) {
+    editando = p || null;
+    $("#dlgTit").textContent = p ? "Editar producto" : "Nuevo producto";
+    $("#fNombre").value = p?.nombre || ""; $("#fCategoria").value = p?.categoria || "Unidad";
+    $("#fEtiqueta").value = p?.etiqueta || ""; $("#fDescripcion").value = p?.descripcion || "";
+    $("#fColor").value = p?.color || "#45b83c"; $("#fOrden").value = p?.orden || 100;
+    $("#fActivo").checked = p ? p.activo !== false : true; $("#fDestacado").checked = !!p?.destacado;
+    $("#fOpciones").innerHTML = ""; (p?.opciones?.length ? p.opciones : [{ nombre: "1 pantalla", precio: "" }]).forEach(filaOpcion);
+    imagenActual = p?.imagen || ""; $("#fFoto").value = ""; mostrarFoto();
+    $("#errProd").textContent = ""; $("#dlg").showModal();
+  }
+  $("#nuevo").onclick = () => abrir();
+  $("#cancelar").onclick = () => $("#dlg").close();
+  $("#quitarFoto").onclick = () => { imagenActual = ""; $("#fFoto").value = ""; mostrarFoto(); };
+  $("#tabla").onclick = async e => {
+    const ed = e.target.closest("[data-editar]"), bo = e.target.closest("[data-borrar]");
+    if (ed) abrir(lista.find(p => p.id === ed.dataset.editar));
+    if (bo) {
+      const p = lista.find(x => x.id === bo.dataset.borrar);
+      if (!confirm(`¿Eliminar "${p.nombre}"? Esto no se puede deshacer.`)) return;
+      try { await api("eliminar", { id: p.id }); lista = lista.filter(x => x !== p); pintar(); } catch (err) { alert(err.message); }
+    }
+  };
+
+  // Reduce la foto en el navegador antes de subirla (máx. 1200 px de ancho)
+  function reducir(archivo) {
+    return new Promise((ok, mal) => {
+      const img = new Image(); img.onerror = () => mal(new Error("No se pudo leer la foto"));
+      img.onload = () => {
+        const esc = Math.min(1, 1200 / img.width);
+        const c = document.createElement("canvas"); c.width = Math.round(img.width * esc); c.height = Math.round(img.height * esc);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        const url = c.toDataURL("image/jpeg", 0.85); URL.revokeObjectURL(img.src);
+        ok({ tipo: "image/jpeg", base64: url.split(",")[1], vista: url });
+      };
+      img.src = URL.createObjectURL(archivo);
+    });
+  }
+  $("#fFoto").onchange = async () => {
+    const f = $("#fFoto").files[0]; if (!f) return;
+    $("#fFotoPrev").textContent = "Subiendo…";
+    try { const r = await reducir(f); const d = await api("foto", { tipo: r.tipo, base64: r.base64 }); imagenActual = d.url; mostrarFoto(); }
+    catch (err) { $("#errProd").textContent = err.message; mostrarFoto(); }
+  };
+
+  const crearId = n => (n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "producto") + "-" + Math.random().toString(36).slice(2, 6);
+  $("#formProd").onsubmit = async e => {
+    e.preventDefault();
+    const opciones = [...$("#fOpciones").children].map(d => { const [a, b] = d.querySelectorAll("input"); return { nombre: a.value.trim(), precio: Number(b.value) }; }).filter(o => o.nombre && o.precio > 0);
+    if (!opciones.length) { $("#errProd").textContent = "Agrega al menos una opción con nombre y precio."; return; }
+    const producto = {
+      id: editando?.id || crearId($("#fNombre").value), nombre: $("#fNombre").value.trim(), categoria: $("#fCategoria").value,
+      descripcion: $("#fDescripcion").value.trim(), etiqueta: $("#fEtiqueta").value.trim(), opciones,
+      color: $("#fColor").value, imagen: imagenActual, orden: Number($("#fOrden").value) || 100,
+      activo: $("#fActivo").checked, destacado: $("#fDestacado").checked,
+    };
+    $("#guardar").disabled = true;
+    try {
+      const d = await api("guardar", { producto });
+      const i = lista.findIndex(p => p.id === d.producto.id);
+      if (i >= 0) lista[i] = d.producto; else lista.push(d.producto);
+      $("#dlg").close(); pintar();
+    } catch (err) { $("#errProd").textContent = err.message; }
+    $("#guardar").disabled = false;
+  };
+</script>
+</body>
+</html>
